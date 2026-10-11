@@ -58,13 +58,19 @@ step "4/8 Gerekli paketler"
 PKGS=(openssh termux-auth python nodejs-lts ffmpeg git curl wget jq tmux nano net-tools iproute2 cronie termux-api)
 [ "$WANT_GO" = 1 ] && PKGS+=(golang)
 
-for p in "${PKGS[@]}"; do
-  if apt-get "${APT_OPTS[@]}" install "$p" >/dev/null 2>&1; then ok "$p"
-  else warn "$p kurulamadı (sonra elle dene: pkg install $p)"; fi
-done
+echo "İndirme uzun sürebilir, ilerleme aşağıda görünecek..."
+if apt-get "${APT_OPTS[@]}" install "${PKGS[@]}"; then
+  ok "Tüm paketler kuruldu"
+else
+  warn "Toplu kurulum başarısız, paketler tek tek deneniyor..."
+  for p in "${PKGS[@]}"; do
+    if apt-get "${APT_OPTS[@]}" install "$p"; then ok "$p"
+    else warn "$p kurulamadı (sonra elle dene: pkg install $p)"; fi
+  done
+fi
 
 if command -v pip >/dev/null 2>&1; then
-  pip install --quiet requests aiohttp >/dev/null 2>&1 && ok "Python: requests, aiohttp" \
+  pip install requests aiohttp && ok "Python: requests, aiohttp" \
     || warn "pip paketleri kurulamadı"
 fi
 
